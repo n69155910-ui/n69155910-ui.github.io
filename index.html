@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arrow Out</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Arrow Out">
+<meta name="theme-color" content="#0d1923">
+
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e4eef0;--panel:#ffffff;--ink:#12303a;--mute:#5d7a83;--line:#c6d9dd;--u:#ff6b57;--d:#1f9d8c;--l:#eea62b;--r:#5578f5;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1923;--panel:#162a38;--ink:#e6f1f4;--mute:#8fb0bb;--line:#24404f;--u:#ff7a66;--d:#35bfae;--l:#f5b947;--r:#7b97ff;--on:#0d1923}}
+:root[data-theme="dark"]{--bg:#0d1923;--panel:#162a38;--ink:#e6f1f4;--mute:#8fb0bb;--line:#24404f;--u:#ff7a66;--d:#35bfae;--l:#f5b947;--r:#7b97ff;--on:#0d1923}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Fredoka',system-ui,-apple-system,'Segoe UI',sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between}
+h1{font-size:26px;margin:0;font-weight:700;letter-spacing:-.01em}
+.stat{display:flex;gap:14px;align-items:center;font-weight:500;color:var(--mute);font-size:15px}
+.hearts{font-size:20px;letter-spacing:2px;color:var(--u)}
+.hearts .x{color:var(--line)}
+.hint{margin:0;color:var(--mute);font-size:15px}
+#board{position:relative;width:100%;aspect-ratio:1;background:var(--panel);border:2px solid var(--line);border-radius:22px;display:grid;grid-template-columns:repeat(var(--n),1fr);grid-template-rows:repeat(var(--n),1fr);padding:6px;overflow:hidden;touch-action:manipulation}
+.tile{margin:5%;border:0;border-radius:28%;display:grid;place-items:center;cursor:pointer;padding:0;color:var(--on);transition:transform .42s cubic-bezier(.6,0,.9,.5),opacity .3s .12s ease-in;will-change:transform;box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -5px 0 rgba(0,0,0,.2),0 5px 0 rgba(0,0,0,.28)}
+.slot{margin:5%;border-radius:28%;background:var(--line);opacity:.55}
+#board{transition:transform .5s}
+#board.tilt{transform:perspective(800px) rotateX(16deg)}
+.tile svg{width:72%;height:72%;fill:currentColor}
+.tile.u{background:var(--u)}.tile.d{background:var(--d)}.tile.l{background:var(--l)}.tile.r{background:var(--r)}
+.tile.gone{opacity:0;pointer-events:none}
+.tile.shake{animation:shake .35s}
+.tile.block{outline:3px solid var(--ink);outline-offset:2px}
+.tile.hl{animation:pulse .7s 3}
+@keyframes shake{25%{translate:-6px 0}75%{translate:6px 0}}
+@keyframes pulse{50%{scale:1.14}}
+.bar{display:flex;gap:10px}
+.bar button,.card button{flex:1;font:inherit;font-weight:700;font-size:16px;padding:13px 10px;border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.bar button:active,.card button:active{transform:translateY(2px)}
+.bar button:disabled{opacity:.4}
+button:focus-visible{outline:3px solid var(--r);outline-offset:2px}
+[hidden]{display:none!important}
+#stage{width:100%;aspect-ratio:1;background:var(--panel);border:2px solid var(--line);border-radius:22px;overflow:hidden;touch-action:none;cursor:grab}
+#stage canvas{width:100%;height:100%;display:block}
+main{min-height:100dvh}
+.sub{display:flex;gap:12px;color:var(--mute);font-size:15px;margin-top:2px}
+.progress{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--d);border-radius:99px;transition:width .35s}
+.icon{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.icon svg,.bar svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bar{margin-top:auto}
+.bar button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;padding:11px 8px}
+.tile.in{animation:pop .4s backwards}
+@keyframes pop{from{scale:.2;opacity:0}}
+#board.bad,#stage.bad{animation:flash .45s}
+@keyframes flash{30%{border-color:var(--u);box-shadow:0 0 0 5px color-mix(in srgb,var(--u) 35%,transparent)}}
+.stars{font-size:36px;letter-spacing:4px;color:var(--l);line-height:1;margin-bottom:6px}
+.stars .x{color:var(--line)}
+.card{animation:rise .3s}
+@keyframes rise{from{translate:0 16px;opacity:0}}
+.tile.u,.tile.d,.tile.l,.tile.r{background-image:linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,0) 55%)}
+.tile svg{filter:drop-shadow(0 2px 0 rgba(0,0,0,.22))}
+.row{display:flex;align-items:center;gap:12px}.row .progress{flex:1}.hearts{font-size:18px}
+.coins{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)}
+.coins::before,.bar b::before{content:'';width:12px;height:12px;border-radius:50%;background:var(--l);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+.bar b{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mute)}.bar b::before{width:9px;height:9px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));translate:-50% 12px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:5;max-width:90vw;text-align:center}
+.toast.show{opacity:1;translate:-50% 0}
+.card button.alt{background:var(--panel);color:var(--ink);border-color:var(--line);margin-top:10px}
+button.coins{font:inherit;font-weight:700;background:var(--panel);border:2px solid var(--line);border-radius:99px;padding:6px 12px;cursor:pointer}
+.coins::after{content:'+';color:var(--d);font-size:20px;line-height:1}
+#ad{z-index:3}
+.adbox{min-height:64px;margin:0 0 14px;display:grid;gap:8px;place-items:center;background:var(--bg);border-radius:14px;padding:14px;color:var(--mute);font-size:14px}
+.adbar{width:100%;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.adbar i{display:block;height:100%;background:var(--l)}
+.pill{font:inherit;font-size:13px;font-weight:700;padding:5px 11px;border-radius:99px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;position:relative;white-space:nowrap}
+.pill.new{border-color:var(--l)}
+.pill.new::after{content:'';position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--u)}
+.ov{position:fixed;inset:0;background:rgba(8,18,26,.6);display:none;place-items:center;padding:20px}
+.ov.show{display:grid}
+.card{background:var(--panel);border-radius:24px;padding:26px;text-align:center;max-width:340px;width:100%}
+.card h2{margin:0 0 6px;font-size:28px}
+.card p{margin:0 0 18px;color:var(--mute)}
+.card button{background:var(--u);color:var(--on);border-color:transparent;width:100%}
+@media (prefers-reduced-motion:reduce){.tile{transition:opacity .2s}.tile.hl,.tile.shake{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Arrow Out</h1>
+      <div class="sub"><span id="lvl">Level 1</span><span id="left">0 left</span></div>
+    </div>
+    <div class="stat"><button class="coins" id="coins" aria-label="Get free coins"></button><button class="icon" id="redo" aria-label="Restart level"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><button class="icon" id="snd" aria-label="Sound and vibration"></button></div>
+  </header>
+  <div class="row"><button class="pill" id="daily">Daily</button><div class="progress"><i id="bar"></i></div><span class="hearts" id="hearts" aria-label="Lives"></span></div>
+  <p class="hint" id="hint">Tap an arrow to slide it off the board. It only moves if nothing is in its way.</p>
+  <div id="board" role="group" aria-label="Puzzle board"></div>
+  <div id="stage" hidden></div>
+  <div class="bar">
+    <button id="undo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>Undo<b>5</b></button>
+    <button id="tip"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg>Hint<b>10</b></button>
+    <button id="mv"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Move<b>20</b></button>
+    <button id="life"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>Life<b>30</b></button>
+    
+  </div>
+</main>
+<div class="ov" id="ad"><div class="card"><h2>Free coins</h2><p id="adm">Watch a short video to earn free coins.</p><div class="adbox" id="adbox">Demo video placeholder</div><button id="adgo">Watch video (+25 coins)</button><button class="alt" id="adx">Close</button></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div class="ov" id="ov"><div class="card"><div class="stars" id="stars"></div><h2 id="ot"></h2><p id="om"></p><button id="ob"></button><button id="ob2" class="alt" hidden></button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const D=[[-1,0],[1,0],[0,-1],[0,1]],N=['u','d','l','r'],ROT=[0,180,270,90];
+const PATH='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l7.2 7.8h-4.3v7.6H9.1V12H4.8z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/></svg>';
+let level=1,n=5,arrows=[],grid=[],hist=[],lives=3,over=false,shape='square',inMask=()=>true,daily=false,salt=0,savedLevel=1;
+try{level=Math.max(1,parseInt(localStorage.getItem('arrowout.level'))||1)}catch(e){}
+const $=id=>document.getElementById(id);
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const inb=(r,c)=>r>=0&&c>=0&&r<n&&c<n;
+function rayLen(r,c,d){return d==0?r:d==1?n-1-r:d==2?c:n-1-c}
+// Each new arrow is placed so it never sits in an earlier arrow's path,
+// so removing arrows in placement order always works: every level is solvable.
+function generate(lv,sz,seed){
+  n=sz||Math.min(10,5+Math.floor((lv-1)/2));
+  const sr=mulberry(lv*31+7+salt);
+  shape=sz||lv<3?'square':['square','circle','triangle','diamond','ring'][sr()*5|0];
+  if(shape!='square')n=Math.max(n,7);
+  const mid=(n-1)/2;
+  inMask=(r,c)=>{const dr=r-mid,dc=c-mid,q=dr*dr+dc*dc;
+    return shape=='circle'?q<=n*n/4:shape=='ring'?q<=n*n/4&&q>=n*n*.05:shape=='triangle'?Math.abs(dc)<=(r+1)/2:shape=='diamond'?Math.abs(dr)+Math.abs(dc)<=mid+.5:true};
+  const rand=mulberry((seed||lv)*7919+13+salt);
+  const g=Array.from({length:n},()=>Array(n).fill(null)),blocked=Array.from({length:n},(_,r)=>Array.from({length:n},(_,c)=>!inMask(r,c)));
+  let cells=0;blocked.forEach(row=>row.forEach(v=>{if(!v)cells++}));
+  const target=Math.round(cells*Math.min(.78,.5+lv*.012));
+  const out=[];let tries=0;
+  while(out.length<target&&tries<6000){
+    tries++;
+    const r=rand()*n|0,c=rand()*n|0,d=rand()*4|0;
+    if(g[r][c]||blocked[r][c])continue;
+    const len=rayLen(r,c,d);
+    if(len<2&&rand()<.8)continue;
+    const a={r,c,d};out.push(a);g[r][c]=a;
+    let y=r+D[d][0],x=c+D[d][1];
+    while(inb(y,x)){blocked[y][x]=true;y+=D[d][0];x+=D[d][1]}
+  }
+  return out;
+}
+function blocker(a){
+  const g=a.f==null?grid:grid[a.f];
+  let y=a.r+D[a.d][0],x=a.c+D[a.d][1];
+  while(inb(y,x)){if(g[y][x])return g[y][x];y+=D[a.d][0];x+=D[a.d][1]}
+  return null;
+}
+function drawHearts(){$('hearts').innerHTML='♥'.repeat(lives)+'<span class="x">'+'♥'.repeat(5-lives)+'</span>'}
+function update(){
+  const left=arrows.filter(a=>!a.gone).length;
+  $('lvl').textContent=(daily?'Daily':'Level '+level)+(kind!='flat'?', '+kind:shape!='square'?', '+shape:'');$('left').textContent=left+' left';
+  $('bar').style.width=(arrows.length?(1-left/arrows.length)*100:0)+'%';
+  $('undo').disabled=!hist.length;drawHearts();drawCoins();return left;
+}
+function start(){
+  over=false;lives=3;mistakes=0;hist=[];$('ob2').hidden=true;
+  kind=lvKind(level);
+  $('stage').hidden=kind=='flat';$('board').hidden=kind!='flat';
+  if(kind!='flat'){start3d();$('ov').classList.remove('show');update();return}
+  arrows=generate(level);
+  grid=Array.from({length:n},()=>Array(n).fill(null));
+  const b=$('board');b.innerHTML='';b.style.setProperty('--n',n);
+  b.classList.toggle('tilt',shape!='square');
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(inMask(r,c)){const s=document.createElement('div');s.className='slot';s.style.gridRow=r+1;s.style.gridColumn=c+1;b.appendChild(s)}
+  $('hint').textContent=shape=='square'?'Tap an arrow to slide it off the board. It only moves if nothing is in its way.':'Bonus board: '+shape+'. Same rule: tap arrows that have a clear path.';
+  arrows.forEach(a=>{
+    grid[a.r][a.c]=a;
+    const el=document.createElement('button');
+    el.className='tile '+N[a.d];el.innerHTML=PATH;el.setAttribute('aria-label','Arrow '+N[a.d]);
+    el.querySelector('svg').style.transform='rotate('+ROT[a.d]+'deg)';
+    el.style.gridRow=a.r+1;el.style.gridColumn=a.c+1;
+    el.onclick=()=>tap(a);a.el=el;b.appendChild(el);
+    el.classList.add('in');el.style.animationDelay=(a.r+a.c)*30+'ms';setTimeout(()=>el.classList.remove('in'),900);
+  });
+  $('ov').classList.remove('show');update();
+}
+function fx(el,cls,ms){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),ms)}
+function tap(a){
+  if(over||a.gone)return;
+  const bl=blocker(a);
+  if(bl){
+    bump(a,bl);sounds.no();mistakes++;lives--;update();
+    if(lives<=0){over=true;sounds.lose();setTimeout(()=>{$('stars').innerHTML='';show('Out of lives','Give this level another go.','Try again',start);const b2=$('ob2');b2.hidden=false;b2.textContent='Continue with 1 life (30 coins)';b2.onclick=()=>{if(spend(30)){lives=1;over=false;b2.hidden=true;$('ov').classList.remove('show');update()}}},500)}
+    return;
+  }
+  a.gone=true;(a.f==null?grid:grid[a.f])[a.r][a.c]=null;hist.push(a);
+  leave(a);sounds.go();
+  if(!update()){
+    over=true;sounds.win();if(daily){dailyWin();return}level++;
+    try{localStorage.setItem('arrowout.level',level)}catch(e){}
+    const st=mistakes==0?3:mistakes<3?2:1,rw=10+st*5+(kind!='flat'?5:0);coins+=rw;saveCoins();setTimeout(()=>{$('stars').innerHTML='★'.repeat(st)+'<span class="x">'+'★'.repeat(3-st)+'</span>';show('Level cleared','+'+rw+' coins earned'+(st==3?', perfect run!':''),'Next level',start)},600);
+  }
+}
+function show(t,m,b,fn){$('ot').textContent=t;$('om').textContent=m;$('ob').textContent=b;$('ob').onclick=fn;$('ov').classList.add('show');$('ob').focus()}
+$('undo').onclick=()=>{
+  if(over||!hist.length||!spend(5))return;
+  const a=hist.pop();a.gone=false;(a.f==null?grid:grid[a.f])[a.r][a.c]=a;
+  back(a);update();
+};
+$('tip').onclick=()=>{
+  if(over)return;
+  const free=arrows.filter(a=>!a.gone&&!blocker(a));
+  if(free.length){if(spend(10))ping(free[Math.random()*free.length|0])}
+};
+$('redo').onclick=start;
+let kind='flat',R,SC,CAM,ROOT,CORE,RC,dragging=false,sx=0,sy=0,moved=0,auto=true,vx=0,vy=0,lastT=0;
+const V3=THREE.Vector3,YA=new V3(0,1,0),XA=new V3(1,0,0),css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.55});
+const FACES=[[[0,0,1],[1,0,0],[0,1,0]],[[0,0,-1],[-1,0,0],[0,1,0]],[[1,0,0],[0,0,-1],[0,1,0]],[[-1,0,0],[0,0,1],[0,1,0]],[[0,1,0],[1,0,0],[0,0,-1]],[[0,-1,0],[1,0,0],[0,0,1]]];
+function lvKind(lv){if(lv<2)return'flat';if(lv==2)return'cube';if(lv==3)return'sphere';return['flat','cube','sphere','flat'][mulberry(lv*131+5+salt)()*4|0]}
+function bump(a,b){fx($(a.f==null?'board':'stage'),'bad',450);if(a.f==null){fx(a.el,'shake',400);fx(b.el,'block',700)}else{a.shake=performance.now();b.pulse=a.shake}}
+function leave(a){if(a.f==null){const k=(n+2)*100;a.el.style.transform='translate('+D[a.d][1]*k+'%,'+D[a.d][0]*k+'%)';a.el.classList.add('gone')}else a.fly=performance.now()}
+function back(a){if(a.f==null){a.el.style.transform='';a.el.classList.remove('gone')}else{a.fly=0;a.mesh.visible=true}}
+function ping(a){if(a.f==null)fx(a.el,'hl',2200);else a.pulse=performance.now()}
+function size(){const w=$('stage').clientWidth;if(w){R.setSize(w,w,false);CAM.aspect=1;CAM.updateProjectionMatrix()}}
+function init3d(){
+  const st=$('stage');
+  R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio));st.appendChild(R.domElement);
+  SC=new THREE.Scene();CAM=new THREE.PerspectiveCamera(40,1,.1,50);CAM.position.set(0,0,7.4);
+  SC.add(new THREE.AmbientLight(0xffffff,.75));
+  const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(3,5,6);SC.add(dl);
+  RC=new THREE.Raycaster();
+  st.addEventListener('pointerdown',e=>{dragging=true;moved=0;vx=vy=0;sx=e.clientX;sy=e.clientY;auto=false});
+  addEventListener('pointermove',e=>{if(!dragging||!ROOT)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=e.clientX;sy=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);ROOT.rotateOnWorldAxis(YA,dx*.01);ROOT.rotateOnWorldAxis(XA,dy*.01);vx=dx*.01;vy=dy*.01});
+  addEventListener('pointerup',e=>{if(!dragging)return;dragging=false;if(moved<8&&st.contains(e.target))pick(e)});
+  new ResizeObserver(size).observe(st);
+  R.setAnimationLoop(frame);
+}
+function pick(e){
+  const r=R.domElement.getBoundingClientRect();
+  RC.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-((e.clientY-r.top)/r.height)*2+1},CAM);
+  const hit=RC.intersectObjects([CORE,...arrows.filter(a=>!a.gone).map(a=>a.mesh)],true)[0];
+  if(!hit||hit.object===CORE)return;
+  let o=hit.object;while(o&&!o.userData.a)o=o.parent;
+  if(o)tap(o.userData.a);
+}
+function frame(t){
+  if(!ROOT||kind=='flat')return;
+  {const k=Math.min(1,(t-ROOT.userData.t0)/550);ROOT.scale.setScalar(.4+.6*(1-Math.pow(1-k,3)))}
+  const dt=Math.min(.05,(t-lastT)/1000||.016);lastT=t;
+  if(!dragging&&(Math.abs(vx)>1e-4||Math.abs(vy)>1e-4)){ROOT.rotateOnWorldAxis(YA,vx);ROOT.rotateOnWorldAxis(XA,vy);const k=Math.pow(.04,dt);vx*=k;vy*=k}
+  else if(auto&&!dragging&&!matchMedia('(prefers-reduced-motion:reduce)').matches)ROOT.rotateOnWorldAxis(YA,.25*dt);
+  arrows.forEach(a=>{
+    const m=a.mesh;if(!m)return;let s=1;
+    if(a.fly){const p=Math.min(1,(t-a.fly)/450);m.position.copy(a.base).addScaledVector(a.t,p*p*p*3.5);s=1-p;if(p>=1)m.visible=false}
+    else{
+      m.position.copy(a.base);
+      if(a.shake&&t-a.shake<400)m.position.addScaledVector(a.t,Math.sin((t-a.shake)/400*Math.PI*4)*.07);
+      if(a.pulse&&t-a.pulse<1400)s=1+.3*Math.abs(Math.sin((t-a.pulse)/1400*Math.PI*2));
+    }
+    m.scale.setScalar(a.sc*s);
+  });
+  R.render(SC,CAM);
+}
+function start3d(){
+  const sz=level>12?5:4;n=sz;arrows=[];grid=[];
+  for(let f=0;f<6;f++){
+    const l=generate(level,sz,level*10+f+1),g=Array.from({length:sz},()=>Array(sz).fill(null));
+    l.forEach(a=>{a.f=f;g[a.r][a.c]=a;arrows.push(a)});grid.push(g);
+  }
+  n=sz;
+  if(!R)init3d();
+  if(ROOT)SC.remove(ROOT);
+  ROOT=new THREE.Group();ROOT.userData.t0=performance.now();SC.add(ROOT);ROOT.quaternion.setFromEuler(new THREE.Euler(.5,-.6,0));auto=true;
+  const sph=kind=='sphere',S=1.25,Rd=1.5;
+  CORE=new THREE.Mesh(sph?new THREE.SphereGeometry(Rd*.985,32,24):new THREE.BoxGeometry(S*1.97,S*1.97,S*1.97),mat(new THREE.Color(css('--line')).multiplyScalar(.55)));
+  ROOT.add(CORE);
+  const col={u:css('--u'),d:css('--d'),l:css('--l'),r:css('--r')},sh=new THREE.Shape();
+  [[0,.5],[.46,0],[.19,0],[.19,-.46],[-.19,-.46],[-.19,0],[-.46,0]].forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));
+  const rr=new THREE.Shape(),w=.46,q=.2;
+  rr.moveTo(-w+q,-w);rr.lineTo(w-q,-w);rr.quadraticCurveTo(w,-w,w,-w+q);rr.lineTo(w,w-q);rr.quadraticCurveTo(w,w,w-q,w);rr.lineTo(-w+q,w);rr.quadraticCurveTo(-w,w,-w,w-q);rr.lineTo(-w,-w+q);rr.quadraticCurveTo(-w,-w,-w+q,-w);
+  const bv={bevelEnabled:true,bevelSize:.03,bevelThickness:.03,bevelSegments:3};
+  const ag=new THREE.ExtrudeGeometry(sh,{depth:.14,...bv}),pg=new THREE.ExtrudeGeometry(rr,{depth:.08,...bv,bevelSegments:2}),pm=mat(css('--panel'));
+  arrows.forEach(a=>{
+    const [nv,uv,vv]=FACES[a.f].map(x=>new V3(...x));
+    const u=(a.c+.5)/sz*2-1,v=1-(a.r+.5)/sz*2;
+    const p=nv.clone().addScaledVector(uv,u).addScaledVector(vv,v);let nrm=nv.clone();
+    if(sph){p.normalize();nrm=p.clone();p.multiplyScalar(Rd)}else p.multiplyScalar(S);
+    const t=[vv.clone(),vv.clone().negate(),uv.clone().negate(),uv.clone()][a.d];
+    t.addScaledVector(nrm,-t.dot(nrm)).normalize();
+    const g=new THREE.Group(),pl=new THREE.Mesh(pg,pm),ar=new THREE.Mesh(ag,mat(col[N[a.d]]));
+    pl.position.z=.03;ar.position.z=.12;ar.scale.set(.85,.85,1);g.add(pl,ar);
+    g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new V3().crossVectors(t,nrm),t,nrm));
+    g.position.copy(p);a.sc=sph?Rd*2/sz*.62:S*2/sz*.9;g.scale.setScalar(a.sc);
+    g.userData.a=a;a.mesh=g;a.base=p.clone();a.t=t;ROOT.add(g);
+  });
+  $('hint').textContent='Drag to spin the '+kind+'. Tap an arrow to slide it off. Each side is its own puzzle.';
+  size();
+}
+let sfx=true,AC;try{sfx=localStorage.getItem('arrowout.sfx')!='0'}catch(e){}
+function tone(f,d,type,v,slide){
+  if(!sfx)return;
+  try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume();
+    const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;
+    o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(t+d)}catch(e){}
+}
+const buzz=p=>{if(sfx&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
+const sounds={
+  go:()=>{tone(520,.14,'triangle',.09,1.6);buzz(10)},
+  no:()=>{tone(150,.22,'sawtooth',.07,.6);buzz([30,40,30])},
+  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle',.09),i*110));buzz([20,30,20,30,60])},
+  lose:()=>{tone(300,.5,'sawtooth',.07,.4);buzz(120)}
+};
+function drawSnd(){$('snd').innerHTML='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/>'+(sfx?'<path d="M16 9a4 4 0 010 6"/>':'<path d="M17 9l5 6M22 9l-5 6"/>')+'</svg>'}
+$('snd').onclick=()=>{sfx=!sfx;try{localStorage.setItem('arrowout.sfx',sfx?'1':'0')}catch(e){}drawSnd();if(sfx)sounds.go()};
+let coins=50,mistakes=0;const MAXL=5;try{const c=localStorage.getItem('arrowout.coins');if(c!==null)coins=Math.max(0,parseInt(c)||0)}catch(e){}
+function drawCoins(){$('coins').textContent=coins;drawPill()}
+function saveCoins(){try{localStorage.setItem('arrowout.coins',coins)}catch(e){}drawCoins()}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),1700)}
+sounds.coin=()=>{tone(880,.12,'square',.04,1.5);buzz(8)};
+function spend(c){if(coins<c){toast('Not enough coins. Tap the coin counter for free coins.');sounds.no();return false}coins-=c;saveCoins();sounds.coin();return true}
+$('mv').onclick=()=>{if(over)return;const f=arrows.filter(a=>!a.gone&&!blocker(a));if(f.length&&spend(20))tap(f[Math.random()*f.length|0])};
+$('life').onclick=()=>{if(over)return;if(lives>=MAXL){toast('Lives are full (max 5)');return}if(spend(30)){lives++;update()}};
+// Simulated rewarded video. In a native build, swap this for an AdMob/AppLovin rewarded ad.
+let adT=0,adWait=0;
+function adUI(){
+  if(adT)return;
+  const left=Math.ceil((adWait-Date.now())/1000),g=$('adgo');
+  g.disabled=left>0;g.textContent=left>0?'Next video in '+left+'s':'Watch video (+25 coins)';
+  if(left>0&&$('ad').classList.contains('show'))setTimeout(adUI,500);
+}
+$('coins').onclick=()=>{$('ad').classList.add('show');adUI()};
+$('adx').onclick=()=>{if(!adT)$('ad').classList.remove('show')};
+$('adgo').onclick=()=>{
+  if(adT||Date.now()<adWait)return;
+  let s=5;const box=$('adbox');
+  const tick=()=>{box.innerHTML='<div class="adbar"><i style="width:'+((5-s)/5*100)+'%"></i></div><span>Video playing... '+s+'s</span>'};
+  $('adgo').disabled=true;tick();
+  adT=setInterval(()=>{s--;if(s>0){tick();return}
+    clearInterval(adT);adT=0;adWait=Date.now()+45000;coins+=25;saveCoins();sounds.win();
+    box.textContent='+25 coins added!';adUI()},1000);
+};
+const dkey=t=>{const d=new Date(t);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}return null}
+function drawPill(){const p=$('daily'),done=ls('arrowout.dlast')==dkey(Date.now());p.textContent=daily?'Exit':done?'Daily ✓':'Daily';p.classList.toggle('new',!daily&&!done)}
+function enterDaily(){if(!daily){savedLevel=level;daily=true;level=9;salt=dkey(Date.now())}start()}
+function exitDaily(){daily=false;salt=0;level=savedLevel;start()}
+function dailyWin(){
+  const st=mistakes==0?3:mistakes<3?2:1,k=dkey(Date.now());let msg;
+  if(ls('arrowout.dlast')!=k){
+    const s=(ls('arrowout.dlast')==dkey(Date.now()-864e5)?(+ls('arrowout.dstreak')||0):0)+1,rw=40+st*5+Math.min(s,7)*5;
+    ls('arrowout.dstreak',s);ls('arrowout.dlast',k);coins+=rw;saveCoins();msg='+'+rw+' coins, '+s+'-day streak!';
+  }else msg='Already claimed today. Come back tomorrow!';
+  setTimeout(()=>{$('stars').innerHTML='★'.repeat(st)+'<span class="x">'+'★'.repeat(3-st)+'</span>';show('Daily complete',msg,'Back to levels',exitDaily)},600);
+}
+$('daily').onclick=()=>{if(adT)return;daily?exitDaily():enterDaily()};
+drawSnd();
+start();
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
+</body>
+</html>
